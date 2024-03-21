@@ -1,0 +1,7 @@
+/.vscode
+/build
+/linux
+/test.asm
+/test.obj
+/test2.asm
+/validator.py
