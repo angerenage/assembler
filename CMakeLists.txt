@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.12)
 
 project(assembler)
 
-# https://cc65.github.io/doc/ca65.html#s11
-
 set(SRCS
 	assembler.c
 	fileIO.c
