@@ -7,18 +7,18 @@ bool isValidSymbolChar(char c) {
     return isalnum(c) || c == '_' || c == '-';
 }
 
-Symbol parseVariableDef(const char *s, unsigned int l) {
-	Symbol var = {5381, NULL, 0, l, VARIABLE, 0, true};
+Symbol parseVariableDef(const char *s) {
+	Symbol var = {5381, NULL, 0, getFileContext(), VARIABLE, 0, true};
 
 	// Parsing name
 	int charIndex;
 	for (charIndex = 1; !isblank(s[charIndex]) && s[charIndex] != '='; charIndex++) {
 		if (isspace(s[charIndex]) || s[charIndex] == '\0') {
-			log_f(LOG_ERROR, "Invalid variable declaration on line %u\n", l);
+			log_f(LOG_ERROR, "Invalid variable declaration\n");
 			throw(EXIT_FAILURE);
 		}
 		else if (!isValidSymbolChar(s[charIndex])) {
-			log_f(LOG_ERROR, "Invalid character \'%c\' (c. %d) in variable name \"%s\" on line %u\n", s[charIndex], charIndex + 1, s, l);
+			log_f(LOG_ERROR, "Invalid character \'%c\' (c. %d) in variable name \"%s\"\n", s[charIndex], charIndex + 1, s);
 			throw(EXIT_FAILURE);
 		}
 
@@ -36,11 +36,11 @@ Symbol parseVariableDef(const char *s, unsigned int l) {
 	}
 
 	if (!equalFinded && s[charIndex] != '=') {
-		log_f(LOG_ERROR, "Invalid element after the definition of variables %.*s (c. %d) on line %u, '=' expected\n", nameEndIndex - 1, &s[1], charIndex + 1, l);
+		log_f(LOG_ERROR, "Invalid element after the definition of variables %.*s (c. %d), '=' expected\n", nameEndIndex - 1, &s[1], charIndex + 1);
 		throw(EXIT_FAILURE);
 	}
 
-	unsigned long long *value = stringToValue(&s[charIndex], l);
+	unsigned long long *value = stringToValue(&s[charIndex]);
 	if (value != NULL) {
 		var.value = *value;
 		free(value);
@@ -52,18 +52,18 @@ Symbol parseVariableDef(const char *s, unsigned int l) {
 	return var;
 }
 
-Symbol parseLabel(const char *s, unsigned int l, unsigned long address) {
-	Symbol label = {5381, NULL, address, l, LABEL, 0, true};
+Symbol parseLabel(const char *s, unsigned long address) {
+	Symbol label = {5381, NULL, address, getFileContext(), LABEL, 0, true};
 
 	// Parsing name
 	int charIndex;
 	for (charIndex = 0; !isblank(s[charIndex]) && s[charIndex] != ':'; charIndex++) {
 		if (s[charIndex] == '\0') {
-			log_f(LOG_ERROR, "Invalid label on line %u\n", l);
+			log_f(LOG_ERROR, "Invalid label\n");
 			throw(EXIT_FAILURE);
 		}
 		else if (!isValidSymbolChar(s[charIndex])) {
-			log_f(LOG_ERROR, "Invalid character \'%c\' (c. %d) in label name \"%s\" on line %u\n", s[charIndex], charIndex + 1, s, l);
+			log_f(LOG_ERROR, "Invalid character \'%c\' (c. %d) in label name \"%s\"\n", s[charIndex], charIndex + 1, s);
 			throw(EXIT_FAILURE);
 		}
 
@@ -76,7 +76,7 @@ Symbol parseLabel(const char *s, unsigned int l, unsigned long address) {
 	// Checking the conformity of the rest of the line
 	while (s[charIndex] != '\0' && s[charIndex] != ':') {
 		if (!isspace(s[charIndex]) && s[charIndex] != ':') {
-			log_f(LOG_ERROR, "Invalid element after the definition of label %s (c. %d) on line %u\n", s, charIndex + 1, l);
+			log_f(LOG_ERROR, "Invalid element after the definition of label %s (c. %d)\n", s, charIndex + 1);
 			throw(EXIT_FAILURE);
 		}
 		charIndex++;
@@ -85,14 +85,14 @@ Symbol parseLabel(const char *s, unsigned int l, unsigned long address) {
 	return label;
 }
 
-void addSymbol(Symbol symb, unsigned int l) {
+void addSymbol(Symbol symb) {
 	for (unsigned int i = 0; i < symbolNbr; i++) {
 		if (symbols[i].nameHash == symb.nameHash) {
 			if (!symbols[i].resolved && symb.resolved) {
 				symbols[i].value = symb.value;
 				symbols[i].type = symb.type;
 
-				symbols[i].definitionLine = l;
+				symbols[i].definitionContext = getFileContext();
 				symbols[i].resolved = true;
 				if (symbols[i].type == EXTERNAL) symbols[i].type == GLOBAL_VAR;
 				
@@ -100,7 +100,19 @@ void addSymbol(Symbol symb, unsigned int l) {
 				return;
 			}
 			else {
-				log_f(LOG_ERROR, "Redefinition of symbol %s on line %u, already defined on line %u\n", symb.name, l, symb.definitionLine);
+				char *fileContext = NULL;
+				try {
+					fileContext = fileContextToString(symb.definitionContext);
+				}catch {} end_try
+
+				if (fileContext) {
+					log_f(LOG_ERROR, "Redefinition of symbol %s, already defined at %s\n", symb.name, fileContext);
+					free(fileContext);
+				}
+				else {
+					log_f(LOG_ERROR, "Redefinition of symbol %s, already defined\n", symb.name);
+				}
+				
 				throw(EXIT_FAILURE);
 			}
 		}
@@ -117,11 +129,11 @@ void addSymbol(Symbol symb, unsigned int l) {
 	memcpy(&symbols[symbolNbr - 1], &symb, sizeof(Symbol));
 }
 
-DataItem getSymbolValue(const char *name, unsigned int l) {
+DataItem getSymbolValue(const char *name) {
 	unsigned long nameHash = 5381, length = 0;
 	for (int i = 0; name[i] != '\0'; i++) {
 		if (!isalnum(name[i]) && name[i] != '_' && name[i] != '-') {
-			log_f(LOG_ERROR, "Invalid character \'%c\' (c. %d) in symbol name \"%s\" on line %u\n", name[i], i + 1, name, l);
+			log_f(LOG_ERROR, "Invalid character \'%c\' (c. %d) in symbol name \"%s\"\n", name[i], i + 1, name);
 			throw(EXIT_FAILURE);
 		}
 
@@ -137,15 +149,15 @@ DataItem getSymbolValue(const char *name, unsigned int l) {
 		}
 	}
 
-	addSymbol((Symbol){nameHash, stringCopy(name), 0, l, VARIABLE, 1, false}, l);
+	addSymbol((Symbol){nameHash, stringCopy(name), 0, getFileContext(), VARIABLE, 1, false});
 	return (DataItem){SYMBOL_REF, .data.symbolIndex = (symbolNbr - 1), sizeof(unsigned long long)};
 }
 
-int getSymbolIndex(const char *name, unsigned int l) {
+int getSymbolIndex(const char *name) {
 	unsigned long nameHash = 5381;
 	for (int i = 0; name[i] != '\0'; i++) {
 		if (!isalnum(name[i]) && name[i] != '_' && name[i] != '-') {
-			log_f(LOG_ERROR, "Invalid character \'%c\' (c. %d) in symbol name \"%s\" on line %u\n", name[i], i + 1, name, l);
+			log_f(LOG_ERROR, "Invalid character \'%c\' (c. %d) in symbol name \"%s\"\n", name[i], i + 1, name);
 			throw(EXIT_FAILURE);
 		}
 
@@ -158,7 +170,7 @@ int getSymbolIndex(const char *name, unsigned int l) {
 			return i;
 	}
 
-	addSymbol((Symbol){nameHash, stringCopy(name), 0, l, EXTERNAL, 1, false}, l);
+	addSymbol((Symbol){nameHash, stringCopy(name), 0, getFileContext(), EXTERNAL, 1, false});
 	return symbolNbr - 1;
 }
 

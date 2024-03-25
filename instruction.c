@@ -7,7 +7,7 @@ static void freeElements(InstructionElement* elements, unsigned int elementNbr) 
 	free(elements);
 }
 
-InstructionElement* splitElements(const char* s, unsigned int *num, unsigned int l) {
+InstructionElement* splitElements(const char* s, unsigned int *num) {
 	int elemAlloc = 1, part = 0, elemId = 0;
 	InstructionElement* elements = (InstructionElement*)allocate(sizeof(InstructionElement) * elemAlloc);
 
@@ -17,7 +17,7 @@ InstructionElement* splitElements(const char* s, unsigned int *num, unsigned int
 			if (s[i] == ',') {
 				part++;
 				if (part >= 3) {
-					log_f(LOG_ERROR, "Unexpected ',' (c. %u) on line %u\n", i, l);
+					log_f(LOG_ERROR, "Unexpected ',' (c. %u)\n", i);
 
 					freeElements(elements, elemId);
 
@@ -45,9 +45,9 @@ InstructionElement* splitElements(const char* s, unsigned int *num, unsigned int
 	return elements;
 }
 
-Instruction parseInstruction(const char* s, unsigned int l) {
+Instruction parseInstruction(const char* s) {
 	unsigned int elementNbr;
-	InstructionElement* elements = splitElements(s, &elementNbr, l);
+	InstructionElement* elements = splitElements(s, &elementNbr);
 
 	Instruction inst;
 	OpCode op = parseOpCode(elements[0].element);

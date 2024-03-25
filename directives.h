@@ -29,20 +29,20 @@ typedef struct directive {
 	unsigned int parameterNumber;
 } Directive;
 
-Directive parseDirective(const char *s, unsigned int l);
-DirectiveKeyWord literalToDirective(char *literal, unsigned int l);
-char **splitParameters(const char *s, unsigned int *num, unsigned int l);
+Directive parseDirective(const char *s);
+DirectiveKeyWord literalToDirective(char *literal);
+char **splitParameters(const char *s, unsigned int *num);
 
-DataItem *executeDirective(Directive directive, unsigned int *elementNumber, uint32_t *address, unsigned int l);
+DataItem *executeDirective(Directive directive, unsigned int *elementNumber, uint32_t *address);
 
-DataItem *writeValue(Directive directive, unsigned int *elementNumber, uint32_t *address, unsigned int l);
-DataItem *changeSectionShort(Directive directive, unsigned int *elementNumber, uint32_t *address, unsigned int l);
-DataItem *changeSection(Directive directive, unsigned int *elementNumber, uint32_t *address, unsigned int l);
-DataItem *setSymbolVisibility(Directive directive, unsigned int *elementNumber, uint32_t *address, unsigned int l);
-DataItem *writeString(Directive directive, unsigned int *elementNumber, uint32_t *address, unsigned int l);
-DataItem *setAddress(Directive directive, unsigned int *elementNumber, uint32_t *address, unsigned int l);
-DataItem *includeFile(Directive directive, unsigned int *elementNumber, uint32_t *address, unsigned int l);
-DataItem *alignAddress(Directive directive, unsigned int *elementNumber, uint32_t *address, unsigned int l);
-DataItem *reserveSpace(Directive directive, unsigned int *elementNumber, uint32_t *address, unsigned int l);
+DataItem *writeValue(Directive directive, unsigned int *elementNumber, uint32_t *address);
+DataItem *changeSectionShort(Directive directive, unsigned int *elementNumber, uint32_t *address);
+DataItem *changeSection(Directive directive, unsigned int *elementNumber, uint32_t *address);
+DataItem *setSymbolVisibility(Directive directive, unsigned int *elementNumber, uint32_t *address);
+DataItem *writeString(Directive directive, unsigned int *elementNumber, uint32_t *address);
+DataItem *setAddress(Directive directive, unsigned int *elementNumber, uint32_t *address);
+DataItem *includeFile(Directive directive, unsigned int *elementNumber, uint32_t *address);
+DataItem *alignAddress(Directive directive, unsigned int *elementNumber, uint32_t *address);
+DataItem *reserveSpace(Directive directive, unsigned int *elementNumber, uint32_t *address);
 
 void freeDirective(Directive directive);

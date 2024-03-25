@@ -1,12 +1,5 @@
 #include "fileIO.h"
 
-typedef struct FileContext {
-	FILE *filePtr;
-	unsigned int lineNumber;
-	char *fileName;
-	char *fileDirectory;
-} FileContext;
-
 static FileContext* fileStack = NULL;
 static unsigned int stackSize = 0;
 static size_t stackCapacity = 0;
@@ -99,6 +92,25 @@ bool openFile(const char *filePath) {
 	return true;
 }
 
+char *fileContextToString(FileContext fileContext) {
+	char *context = NULL;
+	char *path = constructPath(fileContext.fileDirectory, fileContext.fileName);
+
+	size_t pathLength = strlen(path);
+	context = (char*)allocate(sizeof(char) * (pathLength + 6));
+
+	strcpy(context, path);
+	free(path);
+
+	snprintf(&context[pathLength], 5, ":%u", fileContext.lineNumber - 1);
+
+	return context;
+}
+
+FileContext getFileContext() {
+	return fileStack[stackSize - 1];
+}
+
 char* readLine(unsigned int *l) {
 	int bufferSize = 64;
 	char* buffer = (char*)allocate(bufferSize);
@@ -130,7 +142,7 @@ char* readLine(unsigned int *l) {
 				bytesRead++;
 			}
 
-			log_f(LOG_ERROR, "Non ASCII character '%.*s' (c. %d) on line %d\n", bytesRead + 1, extendedChar, position + 1, *l);
+			log_f(LOG_ERROR, "Non ASCII character '%.*s' (c. %d)\n", bytesRead + 1, extendedChar, position + 1);
 			throw(EXIT_FAILURE);
 		}
 		else if (c == '\n') {

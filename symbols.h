@@ -15,23 +15,22 @@ typedef struct symbol {
 	unsigned long nameHash;
 	char* name;
 	unsigned long long value;
-	unsigned int definitionLine;
+	FileContext definitionContext;
 	SymbolType type;
 	unsigned int useNumber;
 	bool resolved;
 } Symbol;
 
-// Variables
 extern Symbol *symbols;
 extern unsigned int symbolNbr;
 
 bool isValidSymbolChar(char c);
 
-Symbol parseVariableDef(const char *s, unsigned int l);
-Symbol parseLabel(const char *s, unsigned int l, unsigned long address);
-void addSymbol(Symbol symb, unsigned int l);
+Symbol parseVariableDef(const char *s);
+Symbol parseLabel(const char *s, unsigned long address);
+void addSymbol(Symbol symb);
 
-DataItem getSymbolValue(const char *name, unsigned int l);
-int getSymbolIndex(const char *name, unsigned int l);
+DataItem getSymbolValue(const char *name);
+int getSymbolIndex(const char *name);
 
 void freeSymbols();

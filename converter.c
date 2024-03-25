@@ -15,7 +15,7 @@ bool charToDigit(char c, unsigned int base, unsigned int *digitValue) {
     return *digitValue < base;
 }
 
-unsigned long long *stringToValue(const char *string, unsigned int l) {
+unsigned long long *stringToValue(const char *string) {
 	unsigned long long *result = (unsigned long long*)allocate(sizeof(unsigned long long));
 	*result = 0;
 
@@ -25,7 +25,7 @@ unsigned long long *stringToValue(const char *string, unsigned int l) {
 			return result;
 		}
 		else {
-			log_f(LOG_ERROR, "Invalid use of single quote in %s at line %i\n", string, l);
+			log_f(LOG_ERROR, "Invalid use of single quote in %s\n", string);
 			free(result);
 			return NULL;
 		}
@@ -35,7 +35,7 @@ unsigned long long *stringToValue(const char *string, unsigned int l) {
 	for (int i = (base != 10 ? 2 : 0); string[i] != '\0'; i++) {
 		unsigned int digitValue;
 		if (!charToDigit(string[i], base, &digitValue)) {
-			log_f(LOG_ERROR, "Invalid digit \'%c\' (c. %d) in \"%s\" at line %i\n", string[i], i + 1, string, l);
+			log_f(LOG_ERROR, "Invalid digit \'%c\' (c. %d) in \"%s\"\n", string[i], i + 1, string);
 			free(result);
 			return NULL;
 		}
@@ -47,12 +47,12 @@ unsigned long long *stringToValue(const char *string, unsigned int l) {
 	return result;
 }
 
-DataItem getStringValue(const char *s, unsigned int l) {
+DataItem getStringValue(const char *s) {
 	if (s[0] == '$') {
-		return getSymbolValue(&s[1], l);
+		return getSymbolValue(&s[1]);
 	}
 	else {
-		unsigned long long *value = stringToValue(s, l);
+		unsigned long long *value = stringToValue(s);
 		if (value != NULL)
 			return (DataItem){DIRECT, .data.directData = value, sizeof(unsigned long long)};
 	}

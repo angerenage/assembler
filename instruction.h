@@ -37,8 +37,8 @@ typedef struct instructionElement {
 	unsigned int part;
 } InstructionElement;
 
-InstructionElement *splitElements(const char* s, unsigned int *num, unsigned int l);
-Instruction parseInstruction(const char* s, unsigned int l);
+InstructionElement *splitElements(const char* s, unsigned int *num);
+Instruction parseInstruction(const char* s);
 DataItem buildInstruction(Instruction instruction);
 
 OpCode parseOpCode(const char* s);

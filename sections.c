@@ -63,13 +63,13 @@ void setSection(unsigned int sectionId) {
 	}
 }
 
-unsigned int getSectionId(const char *name, unsigned int l) {
+unsigned int getSectionId(const char *name) {
 	unsigned long nameHash = 0;
 	
 	int charIndex;
 	for (charIndex = 0; name[charIndex] != '$' && name[charIndex] != '\0'; charIndex++) {
 		if (!isalnum(name[charIndex]) && name[charIndex] != '_' && name[charIndex] != '-') {
-			log_f(LOG_ERROR, "Invalid character \'%c\' (c. %d) in section name \"%s\" on line %u\n", name[charIndex], charIndex + 1, name, l);
+			log_f(LOG_ERROR, "Invalid character \'%c\' (c. %d) in section name \"%s\"\n", name[charIndex], charIndex + 1, name);
 			throw(EXIT_FAILURE);
 		}
 

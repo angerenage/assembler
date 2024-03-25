@@ -3,7 +3,7 @@
 typedef struct {
 	unsigned int minParams;
 	int maxParams;
-	DataItem *(*execute)(Directive directive, unsigned int *elementNumber, uint32_t *address, unsigned int line);
+	DataItem *(*execute)(Directive directive, unsigned int *elementNumber, uint32_t *address);
 } DirectiveMetadata;
 
 static DirectiveMetadata directiveMetadata[] = {
@@ -25,12 +25,12 @@ static DirectiveMetadata directiveMetadata[] = {
 	{1, 2, reserveSpace}, // RESERVE
 };
 
-Directive parseDirective(const char *s, unsigned int l) {
+Directive parseDirective(const char *s) {
 	int charIndex = 1;
 	while (!isspace(s[charIndex]) && s[charIndex] != '\0') charIndex++;
 
 	char *keyword = stringCopyLength(&s[1], charIndex - 1);
-	DirectiveKeyWord keywrd = literalToDirective(keyword, l);
+	DirectiveKeyWord keywrd = literalToDirective(keyword);
 
 	while (s[charIndex] != '\0' && isblank(s[charIndex])) charIndex++;
 
@@ -40,7 +40,7 @@ Directive parseDirective(const char *s, unsigned int l) {
 		directive = (Directive){
 			.keywordLiteral = keyword,
 			.keyword = keywrd,
-			.parameter = s[charIndex] != '\0' ? splitParameters(&s[charIndex], &pNum, l) : NULL,
+			.parameter = s[charIndex] != '\0' ? splitParameters(&s[charIndex], &pNum) : NULL,
 			.parameterNumber = pNum,
 		};
 	}
@@ -52,7 +52,7 @@ Directive parseDirective(const char *s, unsigned int l) {
 	return directive;
 }
 
-DirectiveKeyWord literalToDirective(char *literal, unsigned int l) {
+DirectiveKeyWord literalToDirective(char *literal) {
 	for(int i = 0; literal[i] != '\0'; i++) {
 		literal[i] = tolower(literal[i]);
 	}
@@ -74,12 +74,12 @@ DirectiveKeyWord literalToDirective(char *literal, unsigned int l) {
 	else if (strcmp(literal, "space") == 0) return SPACE;
 	else if (strcmp(literal, "reserve") == 0) return RESERVE;
 
-	log_f(LOG_ERROR, "Unknown \"%s\" directive at line %u\n", literal, l);
+	log_f(LOG_ERROR, "Unknown \"%s\" directive\n", literal);
 	free(literal);
 	throw(EXIT_FAILURE);
 }
 
-char** splitParameters(const char *s, unsigned int *num, unsigned int l) {
+char** splitParameters(const char *s, unsigned int *num) {
 	int paramAlloc = 1, paramId = 0;
 	char** parameters = (char**)allocate(sizeof(char*) * paramAlloc);
 
@@ -103,23 +103,23 @@ char** splitParameters(const char *s, unsigned int *num, unsigned int l) {
 	return parameters;
 }
 
-DataItem *executeDirective(Directive directive, unsigned int *elementNumber, uint32_t *address, unsigned int l) {
+DataItem *executeDirective(Directive directive, unsigned int *elementNumber, uint32_t *address) {
 	DirectiveMetadata meta = directiveMetadata[directive.keyword];
 
 	if (directive.parameterNumber < meta.minParams) {
-		log_f(LOG_ERROR, "Too few parameters for the .%s directive at line %u, expected at least %u\n", directive.keywordLiteral, l, meta.minParams);
+		log_f(LOG_ERROR, "Too few parameters for the .%s directive, expected at least %u\n", directive.keywordLiteral, meta.minParams);
 		freeDirective(directive);
 		throw(EXIT_FAILURE);
 	}
 	else if (meta.maxParams != -1 && directive.parameterNumber > (unsigned int)meta.maxParams) {
-		log_f(LOG_ERROR, "Too many parameters for the .%s directive at line %u, expected at most %u\n", directive.keywordLiteral, l, meta.maxParams);
+		log_f(LOG_ERROR, "Too many parameters for the .%s directive, expected at most %u\n", directive.keywordLiteral,  meta.maxParams);
 		freeDirective(directive);
 		throw(EXIT_FAILURE);
 	}
 
 	DataItem *data;
 	try {
-		data = meta.execute(directive, elementNumber, address, l);
+		data = meta.execute(directive, elementNumber, address);
 	}
 	catch {
 		freeDirective(directive);
@@ -130,7 +130,7 @@ DataItem *executeDirective(Directive directive, unsigned int *elementNumber, uin
 	return data;
 }
 
-DataItem *writeValue(Directive directive, unsigned int *elementNumber, uint32_t *address, unsigned int l) {
+DataItem *writeValue(Directive directive, unsigned int *elementNumber, uint32_t *address) {
 	size_t writeSize;
 	switch (directive.keyword) {
 		case BYTE:
@@ -153,7 +153,7 @@ DataItem *writeValue(Directive directive, unsigned int *elementNumber, uint32_t 
 	DataItem *data = (DataItem*)allocate(sizeof(DataItem) * directive.parameterNumber);
 
 	for (unsigned int i = 0; i < directive.parameterNumber; i++) {
-		DataItem value = getStringValue(directive.parameter[i], l);
+		DataItem value = getStringValue(directive.parameter[i]);
 		if (value.size == 0) {
 			for (unsigned int j = 0; j < i; j++) {
 				if (data[j].type == DIRECT) free(data[j].data.directData);
@@ -171,7 +171,7 @@ DataItem *writeValue(Directive directive, unsigned int *elementNumber, uint32_t 
 	return data;
 }
 
-DataItem *changeSectionShort(Directive directive, unsigned int *elementNumber, uint32_t *address, unsigned int l) {
+DataItem *changeSectionShort(Directive directive, unsigned int *elementNumber, uint32_t *address) {
 	switch (directive.keyword) {
 		case TEXT:
 			setSection(0);
@@ -190,33 +190,33 @@ DataItem *changeSectionShort(Directive directive, unsigned int *elementNumber, u
 	return NULL;
 }
 
-DataItem *changeSection(Directive directive, unsigned int *elementNumber, uint32_t *address, unsigned int l) {
-	setSection(getSectionId(directive.parameter[0], l));
+DataItem *changeSection(Directive directive, unsigned int *elementNumber, uint32_t *address) {
+	setSection(getSectionId(directive.parameter[0]));
 
 	*elementNumber = 0;
 	return NULL;
 }
 
-DataItem *setSymbolVisibility(Directive directive, unsigned int *elementNumber, uint32_t *address, unsigned int l) {
+DataItem *setSymbolVisibility(Directive directive, unsigned int *elementNumber, uint32_t *address) {
 	for (unsigned int i = 0; i < directive.parameterNumber; i++) {
 		if (directive.parameter[i][0] != '$') {
-			log_f(LOG_ERROR, "Something other than a variable was passed as a parameter to the .global directive on line %u. A variable always begins with a $ character.\n", l);
+			log_f(LOG_ERROR, "Something other than a variable was passed as a parameter to the .global directive. A variable always begins with a $ character.\n");
 			throw(EXIT_FAILURE);
 		}
-		int symbolIndex = getSymbolIndex(&directive.parameter[i][1], l);
+		int symbolIndex = getSymbolIndex(&directive.parameter[i][1]);
 
 		if (symbols[symbolIndex].resolved) {
 			if (symbols[symbolIndex].type == LABEL) {
-				log_f(LOG_MESSAGE, "Useless global declaration on line %u. Labels are public by default and do not require global declaration. Please ensure you are declaring a variable.\n", l);
+				log_f(LOG_MESSAGE, "Useless global declaration. Labels are public by default and do not require global declaration. Please ensure you are declaring a variable.\n");
 			}
 			else if (symbols[symbolIndex].type != VARIABLE && symbols[symbolIndex].type != EXTERNAL) {
-				log_f(LOG_ERROR, "Invalid global declaration on line %u. Only variables can be declared as global. Please ensure you are declaring a variable.\n", l);
+				log_f(LOG_ERROR, "Invalid global declaration. Only variables can be declared as global. Please ensure you are declaring a variable.\n");
 				throw(EXIT_FAILURE);
 			}
 		}
 
 		if (symbols[symbolIndex].type == EXTERNAL) {
-			log_f(LOG_WARNING, "Useless global declaration on line %u. Variable %s already defined as global.\n", l, symbols[symbolIndex].name);
+			log_f(LOG_WARNING, "Useless global declaration. Variable %s already defined as global.\n", symbols[symbolIndex].name);
 		}
 		else if (symbols[symbolIndex].type != LABEL) {
 			symbols[symbolIndex].type = symbols[symbolIndex].resolved ? EXTERNAL : GLOBAL_VAR;
@@ -227,13 +227,13 @@ DataItem *setSymbolVisibility(Directive directive, unsigned int *elementNumber, 
 	return NULL;
 }
 
-DataItem *writeString(Directive directive, unsigned int *elementNumber, uint32_t *address, unsigned int l) {
+DataItem *writeString(Directive directive, unsigned int *elementNumber, uint32_t *address) {
 	DataItem *data = (DataItem*)allocate(sizeof(DataItem) * directive.parameterNumber);
 
 	for (unsigned int i = 0; i < directive.parameterNumber; i++) {
 		size_t paramLen = strlen(directive.parameter[i]);
 		if (directive.parameter[i][0] != '"' || directive.parameter[i][paramLen - 1] != '"') {
-			log_f(LOG_ERROR, "Invalid data format for a ascii write directive, expected a string between double quotes on line %u\n", l);
+			log_f(LOG_ERROR, "Invalid data format for a ascii write directive, expected a string between double quotes\n");
 			throw(EXIT_FAILURE);
 		}
 
@@ -254,8 +254,8 @@ DataItem *writeString(Directive directive, unsigned int *elementNumber, uint32_t
 	return data;
 }
 
-DataItem *setAddress(Directive directive, unsigned int *elementNumber, uint32_t *address, unsigned int l) {
-	uint32_t *targetAdd = (uint32_t*)stringToValue(directive.parameter[0], l);
+DataItem *setAddress(Directive directive, unsigned int *elementNumber, uint32_t *address) {
+	uint32_t *targetAdd = (uint32_t*)stringToValue(directive.parameter[0]);
 	if (targetAdd == NULL) {
 		throw(EXIT_FAILURE);
 	}
@@ -287,7 +287,7 @@ DataItem *setAddress(Directive directive, unsigned int *elementNumber, uint32_t 
 	return NULL;
 }
 
-DataItem *includeFile(Directive directive, unsigned int *elementNumber, uint32_t *address, unsigned int l) {
+DataItem *includeFile(Directive directive, unsigned int *elementNumber, uint32_t *address) {
 	char *param = directive.parameter[0];
 	size_t length = strlen(&param[1]);
 
@@ -308,8 +308,8 @@ DataItem *includeFile(Directive directive, unsigned int *elementNumber, uint32_t
 	return NULL;
 }
 
-DataItem *alignAddress(Directive directive, unsigned int *elementNumber, uint32_t *address, unsigned int l) {
-	unsigned long long *alignment = stringToValue(directive.parameter[0], l);
+DataItem *alignAddress(Directive directive, unsigned int *elementNumber, uint32_t *address) {
+	unsigned long long *alignment = stringToValue(directive.parameter[0]);
 	unsigned int shift = *address % *alignment;
 	free(alignment);
 
@@ -330,14 +330,14 @@ DataItem *alignAddress(Directive directive, unsigned int *elementNumber, uint32_
 	return NULL;
 }
 
-DataItem *reserveSpace(Directive directive, unsigned int *elementNumber, uint32_t *address, unsigned int l) {
-	DataItem sizeDI = getStringValue(directive.parameter[0], l);
+DataItem *reserveSpace(Directive directive, unsigned int *elementNumber, uint32_t *address) {
+	DataItem sizeDI = getStringValue(directive.parameter[0]);
 		
 	bool valSet = directive.parameterNumber == 2;
 	DataItem valDI;
 
 	if (valSet)
-		valDI = getStringValue(directive.parameter[1], l);
+		valDI = getStringValue(directive.parameter[1]);
 	else
 		valDI = (DataItem){DIRECT, NULL, 1};
 
@@ -347,7 +347,7 @@ DataItem *reserveSpace(Directive directive, unsigned int *elementNumber, uint32_
 		throw(EXIT_FAILURE);
 	}
 	else if (sizeDI.type == SYMBOL_REF) {
-		log_f(LOG_ERROR, "Illegal use of an unresolved symbol as size parameter for a spacer directive on line %u\n", l);
+		log_f(LOG_ERROR, "Illegal use of an unresolved symbol as size parameter for a spacer directive\n");
 		free(sizeDI.data.directData);
 		if (valSet) free(valDI.data.directData);
 		throw(EXIT_FAILURE);

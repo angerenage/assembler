@@ -6,7 +6,18 @@ void log_f(LogLevel level, char *format, ...) {
 	if (logLevel & level) {
 		LogLevel highestLevel = getHighestLogableLevel(level);
 
+		char *fileContext = NULL;
+		try {
+			fileContext = fileContextToString(getFileContext());
+		} catch {} end_try
+
 		printLevel(highestLevel);
+		printf("%s", setTextColor(highestLevel));
+
+		if (fileContext) {
+			printf("%s > ", fileContext);
+			free(fileContext);
+		}
 
 		va_list args;
 		va_start(args, format);
@@ -17,6 +28,8 @@ void log_f(LogLevel level, char *format, ...) {
 			vfprintf(stderr, format, args);
 		}
 		va_end(args);
+
+		printf(setTextColor(-1));
 	}
 }
 
@@ -35,6 +48,10 @@ void printLevel(LogLevel level) {
 		printf("\e[43m WARNING \e[0m ");
 		break;
 
+	case LOG_MESSAGE:
+		printf("\e[46m MESSAGE \e[0m ");
+		break;
+
 	case LOG_VERBOSE:
 		printf("\e[47m INFO \e[0m ");
 		break;
@@ -44,8 +61,27 @@ void printLevel(LogLevel level) {
 	}
 }
 
+const char *setTextColor(LogLevel level) {
+	switch (level) {
+		case LOG_ERROR:
+			return "\e[31m";
+
+		case LOG_WARNING:
+			return "\e[33m";
+
+		case LOG_MESSAGE:
+			return "\e[36m";
+
+		case LOG_DEBUG:
+			return "\e[32m";
+
+		default:
+			return "\e[0m";
+	}
+}
+
 LogLevel getHighestLogableLevel(LogLevel level) {
-	for (LogLevel i = MAX_LOG; i < MIN_LOG; i = i << 1) {
+	for (LogLevel i = MAX_LOG; i <= MIN_LOG; i = i << 1) {
 		if (logLevel & level & i) {
 			return i;
 		}

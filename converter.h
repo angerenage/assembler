@@ -10,6 +10,6 @@
 
 unsigned int detectBase(const char *string);
 bool charToDigit(char c, unsigned int base, unsigned int *digitValue);
-unsigned long long *stringToValue(const char *string, unsigned int l);
+unsigned long long *stringToValue(const char *string);
 
-DataItem getStringValue(const char *s, unsigned int l);
+DataItem getStringValue(const char *s);

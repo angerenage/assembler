@@ -9,8 +9,6 @@
 
 #define MAX_FILE_NAME 255
 
-static char* rline;
-
 static char* outFileName;
 static FILE* outputFile;
 
@@ -50,7 +48,7 @@ void parseLine(char *line, char *fileName, unsigned int l) {
 	if (charIndex > 0) {
 		char *label = stringCopyLength(line, charIndex);
 		try {
-			addSymbol(parseLabel(label, l, address), l);
+			addSymbol(parseLabel(label, address));
 		}
 		catch {
 			free(label);
@@ -66,12 +64,12 @@ void parseLine(char *line, char *fileName, unsigned int l) {
 	if (line[charIndex] != '\0') {
 		switch (classifyLine(&line[charIndex])) {
 			case DIRECTIVE:
-				directive = parseDirective(&line[charIndex], l);
+				directive = parseDirective(&line[charIndex]);
 				DataItem *data;
 
 				unsigned int elementNumber = 0;
 				try {
-					data = executeDirective(directive, &elementNumber, &address, l);
+					data = executeDirective(directive, &elementNumber, &address);
 				}
 				catch {
 					throw(EXIT_FAILURE);
@@ -97,13 +95,13 @@ void parseLine(char *line, char *fileName, unsigned int l) {
 
 			case INSTRUCTION:
 				log_f(LOG_DEBUG, "line %u is an instruction\n", l);
-				parseInstruction(&line[charIndex], l);
+				parseInstruction(&line[charIndex]);
 				break;
 
 			case VARIABLE_DEF:
-				Symbol sym = parseVariableDef(&line[charIndex], l);
+				Symbol sym = parseVariableDef(&line[charIndex]);
 				try {
-					addSymbol(sym, l);
+					addSymbol(sym);
 				}
 				catch {
 					free(sym.name);
@@ -187,6 +185,7 @@ int main(int argc, char *argv[]) {
 
 	unsigned int l = 0;
 	try {
+		char* rline;
 		while ((rline = readLine(&l)) != NULL) {
 			if (*rline != '\0') {
 				try {

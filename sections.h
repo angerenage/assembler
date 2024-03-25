@@ -35,6 +35,6 @@ void addSection(Section sec);
 void addSectionData(DataItem data);
 void setSection(unsigned int sectionId);
 
-unsigned int getSectionId(const char *name, unsigned int l);
+unsigned int getSectionId(const char *name);
 
 void freeSections();
