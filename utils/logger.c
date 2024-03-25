@@ -12,7 +12,7 @@ void log_f(LogLevel level, char *format, ...) {
 		} catch {} end_try
 
 		printLevel(highestLevel);
-		printf("%s", setTextColor(highestLevel));
+		setTextColor(highestLevel);
 
 		if (fileContext) {
 			printf("%s > ", fileContext);
@@ -29,7 +29,7 @@ void log_f(LogLevel level, char *format, ...) {
 		}
 		va_end(args);
 
-		printf(setTextColor(-1));
+		setTextColor(0);
 	}
 }
 
@@ -61,22 +61,27 @@ void printLevel(LogLevel level) {
 	}
 }
 
-const char *setTextColor(LogLevel level) {
+void setTextColor(LogLevel level) {
 	switch (level) {
 		case LOG_ERROR:
-			return "\e[31m";
+			printf("\e[31m");
+			break;
 
 		case LOG_WARNING:
-			return "\e[33m";
+			printf("\e[33m");
+			break;
 
 		case LOG_MESSAGE:
-			return "\e[36m";
+			printf("\e[36m");
+			break;
 
 		case LOG_DEBUG:
-			return "\e[32m";
+			printf("\e[32m");
+			break;
 
 		default:
-			return "\e[0m";
+			printf("\e[0m");
+			break;
 	}
 }
 

@@ -24,6 +24,6 @@ extern LogLevel logLevel;
 void log_f(LogLevel level, char *format, ...);
 
 void printLevel(LogLevel level);
-const char *setTextColor(LogLevel level);
+void setTextColor(LogLevel level);
 
 LogLevel getHighestLogableLevel(LogLevel level);
