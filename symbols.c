@@ -14,11 +14,11 @@ Symbol parseVariableDef(const char *s, unsigned int l) {
 	int charIndex;
 	for (charIndex = 1; !isblank(s[charIndex]) && s[charIndex] != '='; charIndex++) {
 		if (isspace(s[charIndex]) || s[charIndex] == '\0') {
-			fprintf(stderr, "Error: Invalid variable declaration on line %u\n", l);
+			log_f(LOG_ERROR, "Invalid variable declaration on line %u\n", l);
 			throw(EXIT_FAILURE);
 		}
 		else if (!isValidSymbolChar(s[charIndex])) {
-			fprintf(stderr, "Error: Invalid character \'%c\' (c. %d) in variable name \"%s\" on line %u\n", s[charIndex], charIndex + 1, s, l);
+			log_f(LOG_ERROR, "Invalid character \'%c\' (c. %d) in variable name \"%s\" on line %u\n", s[charIndex], charIndex + 1, s, l);
 			throw(EXIT_FAILURE);
 		}
 
@@ -36,7 +36,7 @@ Symbol parseVariableDef(const char *s, unsigned int l) {
 	}
 
 	if (!equalFinded && s[charIndex] != '=') {
-		fprintf(stderr, "Error: Invalid element after the definition of variables %.*s (c. %d) on line %u, '=' expected\n", nameEndIndex - 1, &s[1], charIndex + 1, l);
+		log_f(LOG_ERROR, "Invalid element after the definition of variables %.*s (c. %d) on line %u, '=' expected\n", nameEndIndex - 1, &s[1], charIndex + 1, l);
 		throw(EXIT_FAILURE);
 	}
 
@@ -59,11 +59,11 @@ Symbol parseLabel(const char *s, unsigned int l, unsigned long address) {
 	int charIndex;
 	for (charIndex = 0; !isblank(s[charIndex]) && s[charIndex] != ':'; charIndex++) {
 		if (s[charIndex] == '\0') {
-			fprintf(stderr, "Error: Invalid label on line %u\n", l);
+			log_f(LOG_ERROR, "Invalid label on line %u\n", l);
 			throw(EXIT_FAILURE);
 		}
 		else if (!isValidSymbolChar(s[charIndex])) {
-			fprintf(stderr, "Error: Invalid character \'%c\' (c. %d) in label name \"%s\" on line %u\n", s[charIndex], charIndex + 1, s, l);
+			log_f(LOG_ERROR, "Invalid character \'%c\' (c. %d) in label name \"%s\" on line %u\n", s[charIndex], charIndex + 1, s, l);
 			throw(EXIT_FAILURE);
 		}
 
@@ -76,7 +76,7 @@ Symbol parseLabel(const char *s, unsigned int l, unsigned long address) {
 	// Checking the conformity of the rest of the line
 	while (s[charIndex] != '\0' && s[charIndex] != ':') {
 		if (!isspace(s[charIndex]) && s[charIndex] != ':') {
-			fprintf(stderr, "Error: Invalid element after the definition of label %s (c. %d) on line %u\n", s, charIndex + 1, l);
+			log_f(LOG_ERROR, "Invalid element after the definition of label %s (c. %d) on line %u\n", s, charIndex + 1, l);
 			throw(EXIT_FAILURE);
 		}
 		charIndex++;
@@ -100,7 +100,7 @@ void addSymbol(Symbol symb, unsigned int l) {
 				return;
 			}
 			else {
-				fprintf(stderr, "Error: Redefinition of symbol %s on line %u, already defined on line %u\n", symb.name, l, symb.definitionLine);
+				log_f(LOG_ERROR, "Redefinition of symbol %s on line %u, already defined on line %u\n", symb.name, l, symb.definitionLine);
 				throw(EXIT_FAILURE);
 			}
 		}
@@ -121,7 +121,7 @@ DataItem getSymbolValue(const char *name, unsigned int l) {
 	unsigned long nameHash = 5381, length = 0;
 	for (int i = 0; name[i] != '\0'; i++) {
 		if (!isalnum(name[i]) && name[i] != '_' && name[i] != '-') {
-			fprintf(stderr, "Error: Invalid character \'%c\' (c. %d) in symbol name \"%s\" on line %u\n", name[i], i + 1, name, l);
+			log_f(LOG_ERROR, "Invalid character \'%c\' (c. %d) in symbol name \"%s\" on line %u\n", name[i], i + 1, name, l);
 			throw(EXIT_FAILURE);
 		}
 
@@ -145,7 +145,7 @@ int getSymbolIndex(const char *name, unsigned int l) {
 	unsigned long nameHash = 5381;
 	for (int i = 0; name[i] != '\0'; i++) {
 		if (!isalnum(name[i]) && name[i] != '_' && name[i] != '-') {
-			fprintf(stderr, "Error: Invalid character \'%c\' (c. %d) in symbol name \"%s\" on line %u\n", name[i], i + 1, name, l);
+			log_f(LOG_ERROR, "Invalid character \'%c\' (c. %d) in symbol name \"%s\" on line %u\n", name[i], i + 1, name, l);
 			throw(EXIT_FAILURE);
 		}
 

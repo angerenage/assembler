@@ -6,6 +6,7 @@
 #include <errno.h>
 
 #include "exception.h"
+#include "logger.h"
 
 void *allocate(size_t size);
 void *allocateFill(size_t size);

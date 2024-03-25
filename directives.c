@@ -74,7 +74,7 @@ DirectiveKeyWord literalToDirective(char *literal, unsigned int l) {
 	else if (strcmp(literal, "space") == 0) return SPACE;
 	else if (strcmp(literal, "reserve") == 0) return RESERVE;
 
-	fprintf(stderr, "Error: Unknown \"%s\" directive at line %u\n", literal, l);
+	log_f(LOG_ERROR, "Unknown \"%s\" directive at line %u\n", literal, l);
 	free(literal);
 	throw(EXIT_FAILURE);
 }
@@ -107,12 +107,12 @@ DataItem *executeDirective(Directive directive, unsigned int *elementNumber, uin
 	DirectiveMetadata meta = directiveMetadata[directive.keyword];
 
 	if (directive.parameterNumber < meta.minParams) {
-		fprintf(stderr, "Error: Too few parameters for the .%s directive at line %u, expected at least %u\n", directive.keywordLiteral, l, meta.minParams);
+		log_f(LOG_ERROR, "Too few parameters for the .%s directive at line %u, expected at least %u\n", directive.keywordLiteral, l, meta.minParams);
 		freeDirective(directive);
 		throw(EXIT_FAILURE);
 	}
 	else if (meta.maxParams != -1 && directive.parameterNumber > (unsigned int)meta.maxParams) {
-		fprintf(stderr, "Error: Too many parameters for the .%s directive at line %u, expected at most %u\n", directive.keywordLiteral, l, meta.maxParams);
+		log_f(LOG_ERROR, "Too many parameters for the .%s directive at line %u, expected at most %u\n", directive.keywordLiteral, l, meta.maxParams);
 		freeDirective(directive);
 		throw(EXIT_FAILURE);
 	}
@@ -200,23 +200,23 @@ DataItem *changeSection(Directive directive, unsigned int *elementNumber, uint32
 DataItem *setSymbolVisibility(Directive directive, unsigned int *elementNumber, uint32_t *address, unsigned int l) {
 	for (unsigned int i = 0; i < directive.parameterNumber; i++) {
 		if (directive.parameter[i][0] != '$') {
-			fprintf(stderr, "Error : Something other than a variable was passed as a parameter to the .global directive on line %u. A variable always begins with a $ character.\n", l);
+			log_f(LOG_ERROR, "Something other than a variable was passed as a parameter to the .global directive on line %u. A variable always begins with a $ character.\n", l);
 			throw(EXIT_FAILURE);
 		}
 		int symbolIndex = getSymbolIndex(&directive.parameter[i][1], l);
 
 		if (symbols[symbolIndex].resolved) {
 			if (symbols[symbolIndex].type == LABEL) {
-				fprintf(stdout, "Warning: Useless global declaration on line %u. Labels are public by default and do not require global declaration. Please ensure you are declaring a variable.\n", l);
+				log_f(LOG_MESSAGE, "Useless global declaration on line %u. Labels are public by default and do not require global declaration. Please ensure you are declaring a variable.\n", l);
 			}
 			else if (symbols[symbolIndex].type != VARIABLE && symbols[symbolIndex].type != EXTERNAL) {
-				fprintf(stderr, "Error: Invalid global declaration on line %u. Only variables can be declared as global. Please ensure you are declaring a variable.\n", l);
+				log_f(LOG_ERROR, "Invalid global declaration on line %u. Only variables can be declared as global. Please ensure you are declaring a variable.\n", l);
 				throw(EXIT_FAILURE);
 			}
 		}
 
 		if (symbols[symbolIndex].type == EXTERNAL) {
-			fprintf(stdout, "Warning: Useless global declaration on line %u. Variable %s already defined as global.\n", l, symbols[symbolIndex].name);
+			log_f(LOG_WARNING, "Useless global declaration on line %u. Variable %s already defined as global.\n", l, symbols[symbolIndex].name);
 		}
 		else if (symbols[symbolIndex].type != LABEL) {
 			symbols[symbolIndex].type = symbols[symbolIndex].resolved ? EXTERNAL : GLOBAL_VAR;
@@ -233,7 +233,7 @@ DataItem *writeString(Directive directive, unsigned int *elementNumber, uint32_t
 	for (unsigned int i = 0; i < directive.parameterNumber; i++) {
 		size_t paramLen = strlen(directive.parameter[i]);
 		if (directive.parameter[i][0] != '"' || directive.parameter[i][paramLen - 1] != '"') {
-			fprintf(stderr, "Error: Invalid data format for a ascii write directive, expected a string between double quotes on line %u\n", l);
+			log_f(LOG_ERROR, "Invalid data format for a ascii write directive, expected a string between double quotes on line %u\n", l);
 			throw(EXIT_FAILURE);
 		}
 
@@ -300,7 +300,7 @@ DataItem *includeFile(Directive directive, unsigned int *elementNumber, uint32_t
 		free(fileName);
 	}
 	else {
-		fprintf(stderr, "Error: Expected a file path between double quote but got '%s'\n", param);
+		log_f(LOG_ERROR, "Expected a file path between double quote but got '%s'\n", param);
 		throw(EXIT_FAILURE);
 	}
 	
@@ -347,7 +347,7 @@ DataItem *reserveSpace(Directive directive, unsigned int *elementNumber, uint32_
 		throw(EXIT_FAILURE);
 	}
 	else if (sizeDI.type == SYMBOL_REF) {
-		fprintf(stderr, "Error: Illegal use of an unresolved symbol as size parameter for a spacer directive on line %u\n", l);
+		log_f(LOG_ERROR, "Illegal use of an unresolved symbol as size parameter for a spacer directive on line %u\n", l);
 		free(sizeDI.data.directData);
 		if (valSet) free(valDI.data.directData);
 		throw(EXIT_FAILURE);
@@ -368,7 +368,6 @@ DataItem *reserveSpace(Directive directive, unsigned int *elementNumber, uint32_
 	if (valSet) {
 		if (valDI.type == DIRECT) {
 			try {
-				printf("direct");
 				*data = (DataItem){DIRECT, .data.directData = allocate(size), size};
 			}
 			catch {

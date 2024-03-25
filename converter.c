@@ -25,7 +25,7 @@ unsigned long long *stringToValue(const char *string, unsigned int l) {
 			return result;
 		}
 		else {
-			fprintf(stderr, "Error: Invalid use of single quote in %s at line %i\n", string, l);
+			log_f(LOG_ERROR, "Invalid use of single quote in %s at line %i\n", string, l);
 			free(result);
 			return NULL;
 		}
@@ -35,7 +35,7 @@ unsigned long long *stringToValue(const char *string, unsigned int l) {
 	for (int i = (base != 10 ? 2 : 0); string[i] != '\0'; i++) {
 		unsigned int digitValue;
 		if (!charToDigit(string[i], base, &digitValue)) {
-			fprintf(stderr, "Error: Invalid digit \'%c\' (c. %d) in \"%s\" at line %i\n", string[i], i + 1, string, l);
+			log_f(LOG_ERROR, "Invalid digit \'%c\' (c. %d) in \"%s\" at line %i\n", string[i], i + 1, string, l);
 			free(result);
 			return NULL;
 		}

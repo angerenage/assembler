@@ -33,6 +33,6 @@ extern ExceptionContext* currentContext;
 		currentContext = currentContext->prev; \
 		longjmp(oldContext->buf, e); \
 	} else { \
-		fprintf(stderr, "Unhandled exception in %s at line %d\n", __FILE__, __LINE__); \
+		log_f(LOG_ERROR, "Unhandled exception in %s at line %d\n", __FILE__, __LINE__); \
 		exit(e); \
 	}

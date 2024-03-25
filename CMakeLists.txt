@@ -7,6 +7,7 @@ set(SRCS
 	fileIO.c
 	utils/mem.c
 	utils/exception.c
+	utils/logger.c
 	symbols.c
 	converter.c
 	instruction.c
@@ -19,6 +20,7 @@ set(HEADERS
 	fileIO.h
 	utils/exception.h
 	utils/mem.h
+	utils/logger.h
 	symbols.h
 	converter.h
 	instruction.h

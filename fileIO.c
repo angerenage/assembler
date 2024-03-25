@@ -64,9 +64,9 @@ bool openFile(const char *filePath) {
 		char *existingFullPath = constructPath(fileStack[i].fileDirectory, fileStack[i].fileName);
 		if (strcmp(fullPath, existingFullPath) == 0) {
 			if (i == stackSize - 1) 
-				fprintf(stderr, "Error: Self include detected in file \"%s\"\n", fileStack[i].fileName);
+				log_f(LOG_ERROR, "Self include detected in file \"%s\"\n", fileStack[i].fileName);
 			else
-				fprintf(stderr, "Error: Circular include detected with file \"%s\" in \"%s\"\n", fileName, fileStack[stackSize - 1].fileName);
+				log_f(LOG_ERROR, "Circular include detected with file \"%s\" in \"%s\"\n", fileName, fileStack[stackSize - 1].fileName);
 			
 			free(fileName);
 			if (directory) free(directory);
@@ -80,7 +80,7 @@ bool openFile(const char *filePath) {
 
 	FILE* inputFile = fopen(fullPath, "r");
 	if (!inputFile) {
-		fprintf(stderr, "Error: Failed to open input file \"%s\", %s\n", fullPath, strerror(errno));
+		log_f(LOG_ERROR, "Failed to open input file \"%s\", %s\n", fullPath, strerror(errno));
 		
 		free(fileName);
 		if (directory) free(directory);
@@ -130,7 +130,7 @@ char* readLine(unsigned int *l) {
 				bytesRead++;
 			}
 
-			fprintf(stderr, "Error: Non ASCII character '%.*s' (c. %d) on line %d\n", bytesRead + 1, extendedChar, position + 1, *l);
+			log_f(LOG_ERROR, "Non ASCII character '%.*s' (c. %d) on line %d\n", bytesRead + 1, extendedChar, position + 1, *l);
 			throw(EXIT_FAILURE);
 		}
 		else if (c == '\n') {
@@ -157,7 +157,7 @@ char* readLine(unsigned int *l) {
 				free(fileStack[stackSize].fileDirectory);
 
 				if (fclose(fileStack[stackSize].filePtr) == EOF) {
-					fprintf(stderr, "Error: Failed to close file \"%s\", %s\n", fileStack[stackSize].fileName, strerror(errno));
+					log_f(LOG_ERROR, "Failed to close file \"%s\", %s\n", fileStack[stackSize].fileName, strerror(errno));
 					free(fileStack[stackSize].fileName);
 					throw(EXIT_FAILURE);
 				}
@@ -186,7 +186,7 @@ char* readLine(unsigned int *l) {
 bool writeData(FILE* fp, const char *fileName, const void *data, size_t size) {
 	if (data != NULL) {
 		if (fwrite(data, size, 1, fp) != 1) {
-			fprintf(stderr, "Error: Error writing data to file %s.\n", fileName);
+			log_f(LOG_ERROR, "Error writing data to file %s.\n", fileName);
 			return false;
 		}
 	}

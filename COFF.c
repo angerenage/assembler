@@ -211,7 +211,7 @@ void writeSymbols(FILE* fp, const char *fileName) {
 				j++;
 			}
 			else if (!symbols[i].resolved) {
-				fprintf(stderr, "Error: Use of the non external unresolved symbol \"%s\" at line %u\n", symbols[j].name, symbols[j].definitionLine);
+				log_f(LOG_ERROR, "Error: Use of the non external unresolved symbol \"%s\" at line %u\n", symbols[j].name, symbols[j].definitionLine);
 				if (symbolTable != NULL) free(symbolTable);
 				throw(EXIT_FAILURE);
 			}

@@ -17,7 +17,7 @@ InstructionElement* splitElements(const char* s, unsigned int *num, unsigned int
 			if (s[i] == ',') {
 				part++;
 				if (part >= 3) {
-					fprintf(stderr, "Error: Unexpected ',' (c. %u) on line %u\n", i, l);
+					log_f(LOG_ERROR, "Unexpected ',' (c. %u) on line %u\n", i, l);
 
 					freeElements(elements, elemId);
 

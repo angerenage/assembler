@@ -69,7 +69,7 @@ unsigned int getSectionId(const char *name, unsigned int l) {
 	int charIndex;
 	for (charIndex = 0; name[charIndex] != '$' && name[charIndex] != '\0'; charIndex++) {
 		if (!isalnum(name[charIndex]) && name[charIndex] != '_' && name[charIndex] != '-') {
-			fprintf(stderr, "Error: Invalid character \'%c\' (c. %d) in section name \"%s\" on line %u\n", name[charIndex], charIndex + 1, name, l);
+			log_f(LOG_ERROR, "Invalid character \'%c\' (c. %d) in section name \"%s\" on line %u\n", name[charIndex], charIndex + 1, name, l);
 			throw(EXIT_FAILURE);
 		}
 

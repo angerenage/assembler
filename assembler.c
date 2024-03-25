@@ -8,7 +8,6 @@
 #include "directives.h"
 
 #define MAX_FILE_NAME 255
-//#define DEBUG
 
 static char* rline;
 
@@ -97,7 +96,7 @@ void parseLine(char *line, char *fileName, unsigned int l) {
 				break;
 
 			case INSTRUCTION:
-				printf("line %u is an instruction\n", l);
+				log_f(LOG_DEBUG, "line %u is an instruction\n", l);
 				parseInstruction(&line[charIndex], l);
 				break;
 
@@ -113,7 +112,7 @@ void parseLine(char *line, char *fileName, unsigned int l) {
 				break;
 
 			case MACRO_DEF:
-				printf("line %u is a macro definition\n", l);
+				log_f(LOG_DEBUG, "line %u is a macro definition\n", l);
 				break;
 
 			case BLANK:
@@ -134,13 +133,15 @@ int main(int argc, char *argv[]) {
 
 		outputFile = fopen("./test.obj", "wb");
 		if (outputFile == NULL) {
-			fprintf(stderr, "Error: Could not open test files\n");
+			log_f(LOG_ERROR, "Could not open test files\n");
 			freeFileStack();
 			return EXIT_FAILURE;
 		}
+
+		logLevel |= LOG_DEBUG;
 	#else
 		if (argc <= 1) {
-			fprintf(stderr, "Error: Missing argument : input file\n");
+			log_f(LOG_ERROR, "Missing argument : input file\n");
 			return EXIT_FAILURE;
 		}
 		else {
@@ -151,7 +152,7 @@ int main(int argc, char *argv[]) {
 					if (strlen(argv[i]) <= MAX_FILE_NAME)
 						outFileName = argv[i];
 					else {
-						fprintf(stderr, "Error: Output file name too long, using a.obj\n");
+						log_f(LOG_ERROR, "Output file name too long, using a.obj\n");
 					}
 					break;
 				}
@@ -160,7 +161,7 @@ int main(int argc, char *argv[]) {
 			if (outFileName == NULL) outFileName = "a.obj";
 			outputFile = fopen(outFileName, "wb");
 			if (outputFile == NULL) {
-				fprintf(stderr, "Error: Could not open output file \"%s\"\n", outFileName);
+				log_f(LOG_ERROR, "Could not open output file \"%s\"\n", outFileName);
 				freeFileStack();
 				return EXIT_FAILURE;
 			}
