@@ -15,7 +15,7 @@ void log_f(LogLevel level, char *format, ...) {
 		setTextColor(highestLevel);
 
 		if (fileContext) {
-			printf("%s > ", fileContext);
+			fprintf((highestLevel > LOG_ERROR ? stdout : stderr), "%s > ", fileContext);
 			free(fileContext);
 		}
 
@@ -34,53 +34,55 @@ void log_f(LogLevel level, char *format, ...) {
 }
 
 void printLevel(LogLevel level) {
+	FILE* stream = (level > LOG_ERROR ? stdout : stderr);
 	switch (level)
 	{
-	case LOG_DEBUG:
-		printf("\e[42m DEBUG \e[0m ");
-		break;
+		case LOG_DEBUG:
+			fprintf(stream, "\e[42m DEBUG \e[0m ");
+			break;
 
-	case LOG_ERROR:
-		printf("\e[41m ERROR \e[0m ");
-		break;
+		case LOG_ERROR:
+			fprintf(stream, "\e[41m ERROR \e[0m ");
+			break;
 
-	case LOG_WARNING:
-		printf("\e[43m WARNING \e[0m ");
-		break;
+		case LOG_WARNING:
+			fprintf(stream, "\e[43m WARNING \e[0m ");
+			break;
 
-	case LOG_MESSAGE:
-		printf("\e[46m MESSAGE \e[0m ");
-		break;
+		case LOG_MESSAGE:
+			fprintf(stream, "\e[46m MESSAGE \e[0m ");
+			break;
 
-	case LOG_VERBOSE:
-		printf("\e[47m INFO \e[0m ");
-		break;
-	
-	default:
-		break;
+		case LOG_VERBOSE:
+			fprintf(stream, "\e[47m INFO \e[0m ");
+			break;
+		
+		default:
+			break;
 	}
 }
 
 void setTextColor(LogLevel level) {
+	FILE* stream = (level > LOG_ERROR ? stdout : stderr);
 	switch (level) {
 		case LOG_ERROR:
-			printf("\e[31m");
+			fprintf(stream, "\e[31m");
 			break;
 
 		case LOG_WARNING:
-			printf("\e[33m");
+			fprintf(stream, "\e[33m");
 			break;
 
 		case LOG_MESSAGE:
-			printf("\e[36m");
+			fprintf(stream, "\e[36m");
 			break;
 
 		case LOG_DEBUG:
-			printf("\e[32m");
+			fprintf(stream, "\e[32m");
 			break;
 
 		default:
-			printf("\e[0m");
+			fprintf(stream, "\e[0m");
 			break;
 	}
 }
