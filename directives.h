@@ -13,7 +13,7 @@ typedef enum directiveKeyWord {
 	BYTE, WORD, LONG, QUAD,
 	TEXT, DATA, BSS,
 	SECTION,
-	GLOBAL,
+	GLOBAL, EXTERN,
 	ASCII, ASCIZ,
 	ORG,
 	INCLUDE,

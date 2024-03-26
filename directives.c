@@ -16,6 +16,7 @@ static DirectiveMetadata directiveMetadata[] = {
 	{0, 0, changeSectionShort}, // BSS
 	{1, 2, changeSection}, // SECTION
 	{1, -1, setSymbolVisibility}, // GLOBAL
+	{1, -1, setSymbolVisibility}, // EXTERN
 	{1, -1, writeString}, // ASCII
 	{1, -1, writeString}, // ASCIZ
 	{1, 1, setAddress}, // ORG
@@ -66,6 +67,7 @@ DirectiveKeyWord literalToDirective(char *literal) {
 	else if (strcmp(literal, "bss") == 0) return BSS;
 	else if (strcmp(literal, "section") == 0) return SECTION;
 	else if (strcmp(literal, "global") == 0) return GLOBAL;
+	else if (strcmp(literal, "extern") == 0) return EXTERN;
 	else if (strcmp(literal, "align") == 0) return ALIGN;
 	else if (strcmp(literal, "ascii") == 0) return ASCII;
 	else if (strcmp(literal, "asciz") == 0) return ASCIZ;
