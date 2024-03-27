@@ -202,26 +202,37 @@ DataItem *changeSection(Directive directive, unsigned int *elementNumber, uint32
 DataItem *setSymbolVisibility(Directive directive, unsigned int *elementNumber, uint32_t *address) {
 	for (unsigned int i = 0; i < directive.parameterNumber; i++) {
 		if (directive.parameter[i][0] != '$') {
-			log_f(LOG_ERROR, "Something other than a variable was passed as a parameter to the .global directive. A variable always begins with a $ character.\n");
+			log_f(LOG_ERROR, "Something other than a variable was passed as a parameter to the .global directive. A variable always begins with a $ character\n");
 			throw(EXIT_FAILURE);
 		}
 		int symbolIndex = getSymbolIndex(&directive.parameter[i][1]);
 
-		if (symbols[symbolIndex].resolved) {
-			if (symbols[symbolIndex].type == LABEL) {
-				log_f(LOG_MESSAGE, "Useless global declaration. Labels are public by default and do not require global declaration. Please ensure you are declaring a variable.\n");
-			}
-			else if (symbols[symbolIndex].type != VARIABLE && symbols[symbolIndex].type != EXTERNAL) {
-				log_f(LOG_ERROR, "Invalid global declaration. Only variables can be declared as global. Please ensure you are declaring a variable.\n");
-				throw(EXIT_FAILURE);
-			}
+		if (symbols[symbolIndex].resolved && directive.keyword == EXTERN) { // can't be a label and undefined
+			log_f(LOG_ERROR, "Bad extern definition, the variable already has a value\n");
+			throw(EXIT_FAILURE);
+		}
+		else if (symbols[symbolIndex].type == EXTERNAL) {
+			log_f(LOG_ERROR, "Invalid global declaration. Symbol %s already defined as extern\n", symbols[symbolIndex].name);
+			throw(EXIT_FAILURE);
+		}
+		else if (symbols[symbolIndex].type != VARIABLE) {
+			log_f(LOG_ERROR, "Invalid global declaration. Only variables can be declared as global\n");
+			throw(EXIT_FAILURE);
+		}
+		else if (symbols[symbolIndex].type == LABEL) {
+			log_f(LOG_MESSAGE, "Useless global declaration. Labels are public by default and do not require global declaration\n");
 		}
 
-		if (symbols[symbolIndex].type == EXTERNAL) {
-			log_f(LOG_WARNING, "Useless global declaration. Variable %s already defined as global.\n", symbols[symbolIndex].name);
+		if (symbols[symbolIndex].type == GLOBAL_VAR) {
+			if (directive.keyword == EXTERN) {
+				log_f(LOG_ERROR, "Bad extern definition, variable %s already defined as global\n", symbols[symbolIndex].name);
+				throw(EXIT_FAILURE);
+			}
+			
+			log_f(LOG_WARNING, "Useless global declaration. Variable %s already defined as global\n", symbols[symbolIndex].name);
 		}
 		else if (symbols[symbolIndex].type != LABEL) {
-			symbols[symbolIndex].type = symbols[symbolIndex].resolved ? EXTERNAL : GLOBAL_VAR;
+			symbols[symbolIndex].type = directive.keyword == GLOBAL ? GLOBAL_VAR : EXTERNAL;
 		}
 	}
 

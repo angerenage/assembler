@@ -87,14 +87,18 @@ Symbol parseLabel(const char *s, unsigned long address) {
 
 void addSymbol(Symbol symb) {
 	for (unsigned int i = 0; i < symbolNbr; i++) {
-		if (symbols[i].nameHash == symb.nameHash) {
+		if (symbols[i].type == EXTERNAL && symb.resolved) {
+			log_f(LOG_ERROR, "The external symbol %s can't have a value\n", symb.name);
+			free(symb.name);
+			throw(EXIT_FAILURE);
+		}
+		else if (symbols[i].nameHash == symb.nameHash) {
 			if (!symbols[i].resolved && symb.resolved) {
 				symbols[i].value = symb.value;
 				symbols[i].type = symb.type;
 
 				symbols[i].definitionContext = getFileContext();
 				symbols[i].resolved = true;
-				if (symbols[i].type == EXTERNAL) symbols[i].type == GLOBAL_VAR;
 				
 				free(symb.name);
 				return;
@@ -170,7 +174,7 @@ int getSymbolIndex(const char *name) {
 			return i;
 	}
 
-	addSymbol((Symbol){nameHash, stringCopy(name), 0, getFileContext(), EXTERNAL, 1, false});
+	addSymbol((Symbol){nameHash, stringCopy(name), 0, getFileContext(), VARIABLE, 1, false});
 	return symbolNbr - 1;
 }
 

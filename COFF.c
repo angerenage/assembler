@@ -175,7 +175,12 @@ void writeSymbols(FILE* fp, const char *fileName) {
 
 		unsigned int j = 0;
 		for (unsigned int i = 0; i < symbolNbr; i++) {
-			if (symbols[i].type != VARIABLE) {
+			if (symbols[i].type == GLOBAL_VAR && !symbols[i].resolved) {
+				log_f(LOG_ERROR, "Use of the global unresolved symbol \"%s\" at %s\n", symbols[j].name, fileContextToString(symbols[j].definitionContext));
+				if (symbolTable != NULL) free(symbolTable);
+				throw(EXIT_FAILURE);
+			}
+			else if (symbols[i].type != VARIABLE) {
 				if (symbolTable == NULL) {
 					symbolTable = (struct symbolEntry*)allocate(sizeof(struct symbolEntry));
 				}
@@ -211,7 +216,7 @@ void writeSymbols(FILE* fp, const char *fileName) {
 				j++;
 			}
 			else if (!symbols[i].resolved) {
-				log_f(LOG_ERROR, "Error: Use of the non external unresolved symbol \"%s\" at %s\n", symbols[j].name, fileContextToString(symbols[j].definitionContext));
+				log_f(LOG_ERROR, "Use of the non external unresolved symbol \"%s\" at %s\n", symbols[j].name, fileContextToString(symbols[j].definitionContext));
 				if (symbolTable != NULL) free(symbolTable);
 				throw(EXIT_FAILURE);
 			}
